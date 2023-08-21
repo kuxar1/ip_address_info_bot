@@ -1,53 +1,56 @@
 from dataclasses import dataclass
-
 from environs import Env
-from typing import List
-
-
-@dataclass
-class DbConfig:
-    host: str
-    password: str
-    user: str
-    database: str
-
 
 @dataclass
 class TgBot:
+    """
+    Creates the TgBot object from environment variables.
+    """
+
     token: str
-    admin_ids: List[int]
     use_redis: bool
+    ip_api_token: str
 
-
-@dataclass
-class Miscellaneous:
-    api_key: str
+    @staticmethod
+    def from_env(env: Env):
+        """
+        Creates the TgBot object from environment variables.
+        """
+        token = env.str("BOT_TOKEN")
+        use_redis = env.bool("USE_REDIS")
+        ip_api_token = env.str("IP_API_TOKEN")
+        return TgBot(token=token, use_redis=use_redis, ip_api_token=ip_api_token)
 
 
 @dataclass
 class Config:
+    """
+    The main configuration class that integrates all the other configuration classes.
+
+    This class holds the other configuration classes, providing a centralized point of access for all settings.
+
+    Attributes
+    ----------
+    tg_bot : TgBot
+        Holds the settings related to the Telegram Bot.
+    """
+
     tg_bot: TgBot
-    db: DbConfig
-    misc: Miscellaneous
 
 
-def load_config(path: str = None):
+def load_config(path: str = None) -> Config:
+    """
+    This function takes an optional file path as input and returns a Config object.
+    :param path: The path of env file from where to load the configuration variables.
+    It reads environment variables from a .env file if provided, else from the process environment.
+    :return: Config object with attributes set as per environment variables.
+    """
+
+    # Create an Env object.
+    # The Env object will be used to read environment variables.
     env = Env()
     env.read_env(path)
 
     return Config(
-        tg_bot=TgBot(
-            token=env.str("BOT_TOKEN"),
-            admin_ids=list(map(int, env.list("ADMINS"))),
-            use_redis=env.bool("USE_REDIS"),
-        ),
-        db=DbConfig(
-            host=env.str('DB_HOST'),
-            password=env.str('DB_PASS'),
-            user=env.str('DB_USER'),
-            database=env.str('DB_NAME')
-        ),
-        misc=Miscellaneous(
-            api_key=env.str('API_KEY')
-        )
+        tg_bot=TgBot.from_env(env)
     )

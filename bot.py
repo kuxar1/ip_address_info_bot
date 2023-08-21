@@ -1,64 +1,75 @@
 import asyncio
 import logging
 
+import betterlogging as bl
 from aiogram import Bot, Dispatcher
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.contrib.fsm_storage.redis import RedisStorage2
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 
-from tgbot.config import load_config
-from tgbot.filters.admin import AdminFilter
-from tgbot.handlers.admin import register_admin
-from tgbot.handlers.echo import register_echo
-from tgbot.handlers.user import register_user
-from tgbot.middlewares.db import DbMiddleware
-
-logger = logging.getLogger(__name__)
+from tgbot.config import load_config, Config
+from tgbot.handlers import routers_list
 
 
-def register_all_middlewares(dp):
-    dp.setup_middleware(DbMiddleware())
+def setup_logging():
+    """
+    Set up logging configuration for the application.
+
+    This method initializes the logging configuration for the application.
+    It sets the log level to INFO and configures a basic colorized log for
+    output. The log format includes the filename, line number, log level,
+    timestamp, logger name, and log message.
+
+    Returns:
+        None
+
+    Example usage:
+        setup_logging()
+    """
+    log_level = logging.INFO
+    bl.basic_colorized_config(level=log_level)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(filename)s:%(lineno)d #%(levelname)-8s [%(asctime)s] - %(name)s - %(message)s",
+    )
+    logger = logging.getLogger(__name__)
+    logger.info("Starting bot")
 
 
-def register_all_filters(dp):
-    dp.filters_factory.bind(AdminFilter)
+def get_storage(config):
+    """
+    Return storage based on the provided configuration.
 
+    Args:
+        config (Config): The configuration object.
 
-def register_all_handlers(dp):
-    register_admin(dp)
-    register_user(dp)
+    Returns:
+        Storage: The storage object based on the configuration.
 
-    register_echo(dp)
+    """
+    if config.tg_bot.use_redis:
+        return RedisStorage.from_url(
+            config.redis.dsn(),
+            key_builder=DefaultKeyBuilder(with_bot_id=True, with_destiny=True),
+        )
+    else:
+        return MemoryStorage()
 
 
 async def main():
-    logging.basicConfig(
-        level=logging.INFO,
-        format=u'%(filename)s:%(lineno)d #%(levelname)-8s [%(asctime)s] - %(name)s - %(message)s',
-    )
-    logger.info("Starting bot")
+    setup_logging()
+
     config = load_config(".env")
+    storage = get_storage(config)
+    bot = Bot(token=config.tg_bot.token, parse_mode="HTML")
+    dp = Dispatcher(storage=storage)
 
-    storage = RedisStorage2() if config.tg_bot.use_redis else MemoryStorage()
-    bot = Bot(token=config.tg_bot.token, parse_mode='HTML')
-    dp = Dispatcher(bot, storage=storage)
-
-    bot['config'] = config
-
-    register_all_middlewares(dp)
-    register_all_filters(dp)
-    register_all_handlers(dp)
-
-    # start
-    try:
-        await dp.start_polling()
-    finally:
-        await dp.storage.close()
-        await dp.storage.wait_closed()
-        await bot.session.close()
+    dp.include_routers(*routers_list)
+    await dp.start_polling(bot)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
-        logger.error("Bot stopped!")
+        logging.error("Bot was shut down")

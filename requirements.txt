@@ -1,3 +1,5 @@
-aiogram~=2.18
-aioredis~=2.0
+aiogram==3.0.0b7
 environs~=9.0
+redis
+betterlogging
+requests==2.31.0
