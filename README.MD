@@ -17,3 +17,31 @@ Also, this bot uses this [`template`](https://github.com/Latand/tgbot_template_v
 1. Create [`venv`](https://docs.python.org/3/library/venv.html)
 2. Install requirements.txt: `pip install -r requirements.txt`.
 3. Run the bot with the command: `python3 bot.py`.
+
+### Bot output example:
+
+```python
+ip: 8.8.8.8
+continent_code: NA
+continent_name: North America
+country_code2: US
+country_code3: USA
+country_name: United States
+country_capital: Washington, D.C.
+state_prov: California
+state_code: US-CA
+district: 
+city: Mountain View
+zipcode: 94043-1351
+latitude: 37.42240
+longitude: -122.08421
+is_eu: False
+calling_code: +1
+country_tld: .us
+languages: en-US,es-US,haw,fr
+geoname_id: 6301403
+isp: Google LLC
+connection_type: 
+organization: Google LLC
+time_zone: {'name': 'America/Los_Angeles', 'offset': -8, 'offset_with_dst': -7, 'current_time': '2023-08-21 11:04:38.359-0700', 'current_time_unix': 1692641078.359, 'is_dst': True, 'dst_savings': 1}
+```
