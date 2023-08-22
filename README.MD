@@ -18,7 +18,7 @@ Also, this bot uses this [`template`](https://github.com/Latand/tgbot_template_v
 2. Install requirements.txt: `pip install -r requirements.txt`.
 3. Run the bot with the command: `python3 bot.py`.
 
-### Bot output example:
+### Bot work output example:
 
 ```python
 ip: 8.8.8.8
